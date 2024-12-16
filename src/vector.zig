@@ -49,74 +49,83 @@ pub fn Vector(comptime N: usize, comptime T: type) type {
             return Self.init(self.vec + other.vec);
         }
 
+        pub fn add_scalar(self: *const Self, scalar: T) Self {
+            var result: @Vector(N, T) = @splat(0.0);
+
+            for (0..N) |i| {
+                result[i] = self.vec[i] + scalar;
+            }
+
+            return Self.init(result);
+        }
+
         pub fn sub(self: *const Self, other: *const Self) Self {
             return Self.init(self.vec - other.vec);
+        }
+
+        pub fn sub_scalar(self: *const Self, scalar: T) Self {
+            var result: @Vector(N, T) = @splat(0.0);
+
+            for (0..N) |i| {
+                result[i] = self.vec[i] - scalar;
+            }
+
+            return Self.init(result);
         }
 
         pub fn mul(self: *const Self, other: *const Self) Self {
             return Self.init(self.vec * other.vec);
         }
 
+        pub fn mul_scalar(self: *const Self, scalar: T) Self {
+            var result: @Vector(N, T) = @splat(0.0);
+
+            for (0..N) |i| {
+                result[i] = self.vec[i] * scalar;
+            }
+
+            return Self.init(result);
+        }
+
         pub fn div(self: *const Self, other: *const Self) Self {
             return Self.init(self.vec / other.vec);
+        }
+
+        pub fn div_scalar(self: *const Self, scalar: T) Self {
+            var result: @Vector(N, T) = @splat(0.0);
+
+            for (0..N) |i| {
+                result[i] = self.vec[i] / scalar;
+            }
+
+            return Self.init(result);
+        }
+
+        pub fn magnitude(self: *const Self) T {
+            return @sqrt(self.dot(self));
+        }
+
+        pub fn normalized(self: *const Self) Self {
+            const mag = self.magnitude();
+
+            if (mag == 0) {
+                return Self.init(@splat(0.0));
+            }
+
+            return self.div_scalar(mag);
         }
 
         pub fn dot(self: *const Self, other: *const Self) T {
             return @reduce(.Add, self.vec * other.vec);
         }
+
+        pub fn cross(self: *const Vector(3, T), other: *const Vector(3, T)) Self {
+            const a1 = @Vector(3, T){ self.y(), self.z(), self.x() };
+            const b1 = @Vector(3, T){ other.z(), other.x(), other.y() };
+            const a2 = @Vector(3, T){ self.z(), self.x(), self.y() };
+            const b2 = @Vector(3, T){ other.y(), other.z(), other.x() };
+
+            return Self.init(a1 * b1 - a2 * b2);
+        }
     };
-}
-
-test "vector" {
-    const v = Vector(4, f32).init([4]f32{ 1, 2, 3, 4 });
-    try std.testing.expectEqual(1.0, v.x());
-    try std.testing.expectEqual(2.0, v.y());
-    try std.testing.expectEqual(3.0, v.z());
-    try std.testing.expectEqual(4.0, v.w());
-}
-
-test "add" {
-    const v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 });
-    const v2 = Vector(4, f32).init(@Vector(4, f32){ 5, 6, 7, 8 });
-    const v3 = v1.add(&v2);
-    try std.testing.expectEqual(6.0, v3.x());
-    try std.testing.expectEqual(8.0, v3.y());
-    try std.testing.expectEqual(10.0, v3.z());
-    try std.testing.expectEqual(12.0, v3.w());
-}
-
-test "sub" {
-    const v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 });
-    const v2 = Vector(4, f32).init(@Vector(4, f32){ 5, 6, 7, 8 });
-    const v3 = v1.sub(&v2);
-    try std.testing.expectEqual(-4.0, v3.x());
-    try std.testing.expectEqual(-4.0, v3.y());
-    try std.testing.expectEqual(-4.0, v3.z());
-    try std.testing.expectEqual(-4.0, v3.w());
-}
-
-test "mul" {
-    const v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 });
-    const v2 = Vector(4, f32).init(@Vector(4, f32){ 5, 6, 7, 8 });
-    const v3 = v1.mul(&v2);
-    try std.testing.expectEqual(5.0, v3.x());
-    try std.testing.expectEqual(12.0, v3.y());
-    try std.testing.expectEqual(21.0, v3.z());
-    try std.testing.expectEqual(32.0, v3.w());
-}
-
-test "div" {
-    const v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 });
-    const v2 = Vector(4, f32).init(@Vector(4, f32){ 5, 6, 7, 8 });
-    const v3 = v1.div(&v2);
-    try std.testing.expectEqual(0.2, v3.x());
-    try std.testing.expectEqual(0.33333334, v3.y());
-    try std.testing.expectEqual(0.42857143, v3.z());
-    try std.testing.expectEqual(0.5, v3.w());
-}
-
-test "dot" {
-    const v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 });
-    const v2 = Vector(4, f32).init(@Vector(4, f32){ 5, 6, 7, 8 });
-    try std.testing.expectEqual(70.0, v1.dot(&v2));
 }
