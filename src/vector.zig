@@ -50,13 +50,8 @@ pub fn Vector(comptime N: usize, comptime T: type) type {
         }
 
         pub fn add_scalar(self: *const Self, scalar: T) Self {
-            var result: @Vector(N, T) = @splat(0.0);
-
-            for (0..N) |i| {
-                result[i] = self.vec[i] + scalar;
-            }
-
-            return Self.init(result);
+            const scalar_vec: @Vector(N, T) = @splat(scalar);
+            return Self.init(self.vec + scalar_vec);
         }
 
         pub fn sub(self: *const Self, other: *const Self) Self {
@@ -64,13 +59,8 @@ pub fn Vector(comptime N: usize, comptime T: type) type {
         }
 
         pub fn sub_scalar(self: *const Self, scalar: T) Self {
-            var result: @Vector(N, T) = @splat(0.0);
-
-            for (0..N) |i| {
-                result[i] = self.vec[i] - scalar;
-            }
-
-            return Self.init(result);
+            const scalar_vec: @Vector(N, T) = @splat(scalar);
+            return Self.init(self.vec - scalar_vec);
         }
 
         pub fn mul(self: *const Self, other: *const Self) Self {
@@ -78,13 +68,8 @@ pub fn Vector(comptime N: usize, comptime T: type) type {
         }
 
         pub fn mul_scalar(self: *const Self, scalar: T) Self {
-            var result: @Vector(N, T) = @splat(0.0);
-
-            for (0..N) |i| {
-                result[i] = self.vec[i] * scalar;
-            }
-
-            return Self.init(result);
+            const scalar_vec: @Vector(N, T) = @splat(scalar);
+            return Self.init(self.vec * scalar_vec);
         }
 
         pub fn div(self: *const Self, other: *const Self) Self {
@@ -92,13 +77,8 @@ pub fn Vector(comptime N: usize, comptime T: type) type {
         }
 
         pub fn div_scalar(self: *const Self, scalar: T) Self {
-            var result: @Vector(N, T) = @splat(0.0);
-
-            for (0..N) |i| {
-                result[i] = self.vec[i] / scalar;
-            }
-
-            return Self.init(result);
+            const scalar_vec: @Vector(N, T) = @splat(scalar);
+            return Self.init(self.vec / scalar_vec);
         }
 
         pub fn magnitude(self: *const Self) T {
