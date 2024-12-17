@@ -23,7 +23,7 @@ pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
             var mat = Self.zero();
 
             for (0..M) |i| {
-                mat.mat[i * N + i] = 1.0;
+                mat.mat[i * M + i] = 1.0;
             }
 
             return mat;
@@ -49,21 +49,21 @@ pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
             }
 
             var minor_matrix = Matrix(M - 1, N - 1, T).zero();
-            var minor_row = 0;
+            var minor_row: usize = 0;
 
             for (0..M) |i| {
                 if (i == row) {
                     continue;
                 }
 
-                var minor_column = 0;
+                var minor_column: usize = 0;
 
                 for (0..N) |j| {
                     if (j == column) {
                         continue;
                     }
 
-                    minor_matrix.mat[minor_row * N + minor_column] = self.mat[i * N + j];
+                    minor_matrix.mat[minor_row * (M - 1) + minor_column] = self.mat[i * M + j];
                     minor_column += 1;
                 }
 
@@ -84,8 +84,8 @@ pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
 
             for (0..M) |i| {
                 for (0..N) |j| {
-                    const sign = if ((i + j) % 2 == 0) 1 else -1;
-                    cofactor_matrix.mat[i * N + j] = sign * self.minor(i, j).determinant();
+                    const sign: T = if ((i + j) % 2 == 0) 1 else -1;
+                    cofactor_matrix.mat[i * M + j] = sign * self.minor(i, j).determinant();
                 }
             }
 
@@ -98,21 +98,22 @@ pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
                     @compileError("Matrix must be square");
                 }
 
-                switch (M) {
-                    1 => {
-                        return self.mat[0];
-                    },
-                    2 => {
-                        return self.mat[0] * self.mat[3] - self.mat[1] * self.mat[2];
-                    },
-                    _ => {
-                        var det = 0;
-                        for (0..M) |i| {
-                            det += self.mat[i * N + 0] * self.cofactor()[i * N + 0];
-                        }
-                        return det;
-                    },
+                if (M == 1) {
+                    return self.mat[0];
                 }
+            }
+
+            switch (M) {
+                2 => {
+                    return self.mat[0] * self.mat[3] - self.mat[1] * self.mat[2];
+                },
+                else => {
+                    var det: T = 0;
+                    for (0..M) |i| {
+                        det += self.mat[i] * self.cofactor().mat[i];
+                    }
+                    return det;
+                },
             }
         }
 
@@ -156,7 +157,7 @@ pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
             for (0..M) |i| {
                 for (0..N) |j| {
                     for (0..N) |k| {
-                        mat.mat[i * N + j] += self.mat[i * N + k] * other.mat[k * N + j];
+                        mat.mat[i * M + j] += self.mat[i * M + k] * other.mat[k * M + j];
                     }
                 }
             }
@@ -174,7 +175,7 @@ pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
         }
 
         pub fn div_scalar(self: *const Self, scalar: T) Self {
-            const mat_scalar: @Vector(N * N, T) = @splat(scalar);
+            const mat_scalar: @Vector(M * N, T) = @splat(scalar);
             return Self.init(self.mat / mat_scalar);
         }
     };

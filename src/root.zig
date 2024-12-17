@@ -128,3 +128,75 @@ test "normalized" {
         1.0 / @sqrt(4.0),
     }), v.normalized());
 }
+
+test "Mat1x1_identity" {
+    try std.testing.expectEqual(Matrix(1, 1, f32).init(@Vector(1, f32){1}), Matrix(1, 1, f32).identity());
+}
+
+test "Mat4x4_identity" {
+    try std.testing.expectEqual(Mat4x4.init(@Vector(16, f32){
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+    }), Mat4x4.identity());
+}
+
+test "Mat4x4_cofactor" {
+    const mat = Mat4x4.init(@Vector(16, f32){
+        3, 0, 2, -1,
+        1, 2, 0, -2,
+        4, 0, 6, -3,
+        5, 0, 2, 0,
+    });
+
+    try std.testing.expectEqual(Mat4x4.init(@Vector(16, f32){
+        12, -50, -30, -44,
+        0,  10,  0,   0,
+        -4, 10,  10,  8,
+        0,  20,  10,  20,
+    }), mat.cofactor());
+}
+
+test "Mat4x4_determinant" {
+    const mat = Mat4x4.init(@Vector(16, f32){
+        3, 0, 2, -1,
+        1, 2, 0, -2,
+        4, 0, 6, -3,
+        5, 0, 2, 0,
+    });
+
+    try std.testing.expectEqual(20.0, mat.determinant());
+}
+
+test "Mat4x4_adjugate" {
+    const mat = Mat4x4.init(@Vector(16, f32){
+        3, 0, 2, -1,
+        1, 2, 0, -2,
+        4, 0, 6, -3,
+        5, 0, 2, 0,
+    });
+
+    try std.testing.expectEqual(Mat4x4.init(@Vector(16, f32){
+        12,  0,  -4, 0,
+        -50, 10, 10, 20,
+        -30, 0,  10, 10,
+        -44, 0,  8,  20,
+    }), mat.adjugate());
+}
+
+test "Mat4x4_inverse" {
+    const mat = Mat4x4.init(@Vector(16, f32){
+        3, 0, 2, -1,
+        1, 2, 0, -2,
+        4, 0, 6, -3,
+        5, 0, 2, 0,
+    });
+
+    try std.testing.expectEqual(Mat4x4.init(@Vector(16, f32){
+        0.6,  0.0, -0.2, 0.0,
+        -2.5, 0.5, 0.5,  1.0,
+        -1.5, 0.0, 0.5,  0.5,
+        -2.2, 0.0, 0.4,  1.0,
+    }), mat.inverse());
+}
