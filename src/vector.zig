@@ -1,5 +1,3 @@
-const std = @import("std");
-
 pub fn Vector(comptime N: usize, comptime T: type) type {
     return struct {
         vec: @Vector(N, T),
