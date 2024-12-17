@@ -29,6 +29,10 @@ pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
             return mat;
         }
 
+        pub fn at(self: *const Self, row: usize, column: usize) *T {
+            return self.mat[row * M + column];
+        }
+
         pub fn transpose(self: *const Self) Self {
             var mat = Self.zero();
 
