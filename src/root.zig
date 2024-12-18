@@ -1,5 +1,3 @@
-const std = @import("std");
-
 pub const Vector = @import("vector.zig").Vector;
 
 pub const Vec2 = Vector(2, f64);
