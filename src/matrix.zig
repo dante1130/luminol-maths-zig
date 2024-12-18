@@ -1,4 +1,4 @@
-pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
+pub fn Matrix(comptime M: usize, comptime N: usize, comptime T: type) type {
     return struct {
         mat: @Vector(M * N, T),
         const Self = @This();
@@ -30,7 +30,7 @@ pub fn Matrix(comptime M: usize, N: usize, comptime T: type) type {
         }
 
         pub fn at(self: *const Self, row: usize, column: usize) *T {
-            return self.mat[row * M + column];
+            return @constCast(&self.mat[row * M + column]);
         }
 
         pub fn transpose(self: *const Self) Self {

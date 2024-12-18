@@ -12,13 +12,15 @@ pub const Vec4f = Vector(4, f32);
 
 pub const Matrix = @import("matrix.zig").Matrix;
 
-pub const Mat2x2 = Matrix(2, 2, f32);
-pub const Mat3x3 = Matrix(3, 3, f32);
-pub const Mat4x4 = Matrix(4, 4, f32);
+pub const Mat2x2 = Matrix(2, 2, f64);
+pub const Mat3x3 = Matrix(3, 3, f64);
+pub const Mat4x4 = Matrix(4, 4, f64);
 
-pub const Mat2x2f = Matrix(2, 2, f64);
-pub const Mat3x3f = Matrix(3, 3, f64);
-pub const Mat4x4f = Matrix(4, 4, f64);
+pub const Mat2x2f = Matrix(2, 2, f32);
+pub const Mat3x3f = Matrix(3, 3, f32);
+pub const Mat4x4f = Matrix(4, 4, f32);
+
+pub const transform = @import("transform.zig");
 
 test "dot" {
     var v1 = Vec4f.init(@Vector(4, f32){ 0, 0, 0, 0 });
@@ -134,23 +136,23 @@ test "Mat1x1_identity" {
 }
 
 test "Mat4x4_identity" {
-    try std.testing.expectEqual(Mat4x4.init(@Vector(16, f32){
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
         0, 0, 0, 1,
-    }), Mat4x4.identity());
+    }), Mat4x4f.identity());
 }
 
 test "Mat4x4_cofactor" {
-    const mat = Mat4x4.init(@Vector(16, f32){
+    const mat = Mat4x4f.init(@Vector(16, f32){
         3, 0, 2, -1,
         1, 2, 0, -2,
         4, 0, 6, -3,
         5, 0, 2, 0,
     });
 
-    try std.testing.expectEqual(Mat4x4.init(@Vector(16, f32){
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
         12, -50, -30, -44,
         0,  10,  0,   0,
         -4, 10,  10,  8,
@@ -159,7 +161,7 @@ test "Mat4x4_cofactor" {
 }
 
 test "Mat4x4_determinant" {
-    const mat = Mat4x4.init(@Vector(16, f32){
+    const mat = Mat4x4f.init(@Vector(16, f32){
         3, 0, 2, -1,
         1, 2, 0, -2,
         4, 0, 6, -3,
@@ -170,14 +172,14 @@ test "Mat4x4_determinant" {
 }
 
 test "Mat4x4_adjugate" {
-    const mat = Mat4x4.init(@Vector(16, f32){
+    const mat = Mat4x4f.init(@Vector(16, f32){
         3, 0, 2, -1,
         1, 2, 0, -2,
         4, 0, 6, -3,
         5, 0, 2, 0,
     });
 
-    try std.testing.expectEqual(Mat4x4.init(@Vector(16, f32){
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
         12,  0,  -4, 0,
         -50, 10, 10, 20,
         -30, 0,  10, 10,
@@ -186,17 +188,64 @@ test "Mat4x4_adjugate" {
 }
 
 test "Mat4x4_inverse" {
-    const mat = Mat4x4.init(@Vector(16, f32){
+    const mat = Mat4x4f.init(@Vector(16, f32){
         3, 0, 2, -1,
         1, 2, 0, -2,
         4, 0, 6, -3,
         5, 0, 2, 0,
     });
 
-    try std.testing.expectEqual(Mat4x4.init(@Vector(16, f32){
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
         0.6,  0.0, -0.2, 0.0,
         -2.5, 0.5, 0.5,  1.0,
         -1.5, 0.0, 0.5,  0.5,
         -2.2, 0.0, 0.4,  1.0,
     }), mat.inverse());
+}
+
+test "translate" {
+    const translation_vector = Vec3f.init(@Vector(3, f32){ 1, 2, 3 });
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        1, 2, 3, 1,
+    }), transform.translate_4x4(f32, &translation_vector));
+}
+
+test "rotate_x" {
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
+        1, 0,         0,         0,
+        0, 0.8660254, 0.5,       0,
+        0, -0.5,      0.8660254, 0,
+        0, 0,         0,         1,
+    }), transform.rotate_x(4, f32, std.math.pi / 6.0));
+}
+
+test "rotate_y" {
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
+        0.8660254, 0, -0.5,      0,
+        0,         1, 0,         0,
+        0.5,       0, 0.8660254, 0,
+        0,         0, 0,         1,
+    }), transform.rotate_y(4, f32, std.math.pi / 6.0));
+}
+
+test "rotate_z" {
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
+        0.8660254, 0.5,       0, 0,
+        -0.5,      0.8660254, 0, 0,
+        0,         0,         1, 0,
+        0,         0,         0, 1,
+    }), transform.rotate_z(4, f32, std.math.pi / 6.0));
+}
+
+test "scale" {
+    const scale_vector = Vec3f.init(@Vector(3, f32){ 2, 3, 4 });
+    try std.testing.expectEqual(Mat4x4f.init(@Vector(16, f32){
+        2, 0, 0, 0,
+        0, 3, 0, 0,
+        0, 0, 4, 0,
+        0, 0, 0, 1,
+    }), transform.scale_4x4(f32, &scale_vector));
 }
