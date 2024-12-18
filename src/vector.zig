@@ -45,6 +45,13 @@ pub fn Vector(comptime N: usize, comptime T: type) type {
             return self.vec[3];
         }
 
+        pub fn slice(self: *const Self, comptime start: usize, comptime end: usize) Vector(end - start, T) {
+            const arr_view: [N]T = self.vec;
+            var arr_slice: [end - start]T = undefined;
+            @memcpy(&arr_slice, arr_view[start..end]);
+            return Vector(end - start, T).init(arr_slice);
+        }
+
         pub fn add(self: *const Self, other: *const Self) Self {
             return Self.init(self.vec + other.vec);
         }
@@ -217,4 +224,11 @@ test "normalized" {
         1.0 / @sqrt(4.0),
         1.0 / @sqrt(4.0),
     }), v.normalized());
+}
+
+test "slice" {
+    var v = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 });
+    try std.testing.expectEqual(Vector(2, f32).init(
+        @Vector(2, f32){ 2, 3 },
+    ), v.slice(1, 3));
 }
