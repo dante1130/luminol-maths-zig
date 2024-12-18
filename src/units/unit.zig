@@ -9,3 +9,11 @@ pub const Seconds_f = Time(f32, .second);
 pub const Minutes_f = Time(f32, .minute);
 pub const Milliseconds_f = Time(f32, .millisecond);
 pub const Nanoseconds_f = Time(f32, .nanosecond);
+
+pub const Angle = @import("angle.zig").Angle;
+
+pub const Degrees = Angle(f64, .degrees);
+pub const Radians = Angle(f64, .radians);
+
+pub const Degrees_f = Angle(f32, .degrees);
+pub const Radians_f = Angle(f32, .radians);

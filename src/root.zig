@@ -21,5 +21,4 @@ pub const Mat3x3f = Matrix(3, 3, f32);
 pub const Mat4x4f = Matrix(4, 4, f32);
 
 pub const transform = @import("transform.zig");
-
 pub const unit = @import("units/unit.zig");

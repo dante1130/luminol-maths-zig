@@ -2,10 +2,11 @@ const std = @import("std");
 
 const Vector = @import("vector.zig").Vector;
 const Matrix = @import("matrix.zig").Matrix;
+const unit = @import("units/unit.zig");
 
 pub fn PerspectiveMatrixParams(comptime T: type) type {
     return struct {
-        fov_degrees: T,
+        fov: unit.Angle(T, .degrees),
         aspect: T,
         near: T,
         far: T,
@@ -16,14 +17,14 @@ pub fn left_handed_perspective_matrix(
     comptime T: type,
     params: PerspectiveMatrixParams(T),
 ) Matrix(4, 4, T) {
-    const tan_half_fov = @tan(params.fov_degrees) / 2;
-    const range = params.near - params.far;
+    const tan_half_fov = @tan(params.fov.as(.radians).angle / 2.0);
+    const range = params.far - params.near;
 
     // [A] [0] [0] [0]
     // [0] [B] [0] [0]
     // [0] [0] [C] [D]
     // [0] [0] [E] [0]
-    var perspective_matrix = Matrix(4, 4, T).identity();
+    var perspective_matrix = Matrix(4, 4, T).zero();
 
     // A
     perspective_matrix.at(0, 0).* = 1 / (tan_half_fov * params.aspect);
@@ -34,7 +35,7 @@ pub fn left_handed_perspective_matrix(
     // D
     perspective_matrix.at(2, 3).* = 1;
     // E
-    perspective_matrix.at(3, 2).* = -params.far * params.near / range;
+    perspective_matrix.at(3, 2).* = -(params.far * params.near) / range;
 
     return perspective_matrix;
 }
@@ -42,7 +43,7 @@ pub fn left_handed_perspective_matrix(
 pub fn LookAtMatrixParams(comptime T: type) type {
     return struct {
         eye: Vector(3, T),
-        center: Vector(3, T),
+        target: Vector(3, T),
         up: Vector(3, T),
     };
 }
@@ -51,7 +52,7 @@ pub fn left_handed_look_at_matrix(
     comptime T: type,
     params: LookAtMatrixParams(T),
 ) Matrix(4, 4, T) {
-    const forward = params.center.sub(&params.eye).normalized();
+    const forward = params.target.sub(&params.eye).normalized();
     const right = params.up.cross(&forward).normalized();
     const up = forward.cross(&right);
 
@@ -113,10 +114,10 @@ pub fn translate_4x4(comptime T: type, translation_vector: *const Vector(3, T)) 
 
 pub fn rotate_2x2(
     comptime T: type,
-    angle_radians: T,
+    angle: unit.Angle(T, .radians),
 ) Matrix(2, 2, T) {
-    const cos_angle = @cos(angle_radians);
-    const sin_angle = @sin(angle_radians);
+    const cos_angle = @cos(angle.angle);
+    const sin_angle = @sin(angle.angle);
 
     var rotation_matrix = Matrix(2, 2, T).identity();
 
@@ -131,7 +132,7 @@ pub fn rotate_2x2(
 pub fn rotate_x(
     comptime M: usize,
     comptime T: type,
-    angle_radians: T,
+    angle: unit.Angle(T, .radians),
 ) Matrix(M, M, T) {
     comptime {
         if (M != 3 and M != 4) {
@@ -139,8 +140,8 @@ pub fn rotate_x(
         }
     }
 
-    const cos_angle = @cos(angle_radians);
-    const sin_angle = @sin(angle_radians);
+    const cos_angle = @cos(angle.angle);
+    const sin_angle = @sin(angle.angle);
 
     var rotation_matrix = Matrix(M, M, T).identity();
 
@@ -155,7 +156,7 @@ pub fn rotate_x(
 pub fn rotate_y(
     comptime M: usize,
     comptime T: type,
-    angle_radians: T,
+    angle: unit.Angle(T, .radians),
 ) Matrix(M, M, T) {
     comptime {
         if (M != 3 and M != 4) {
@@ -163,8 +164,8 @@ pub fn rotate_y(
         }
     }
 
-    const cos_angle = @cos(angle_radians);
-    const sin_angle = @sin(angle_radians);
+    const cos_angle = @cos(angle.angle);
+    const sin_angle = @sin(angle.angle);
 
     var rotation_matrix = Matrix(M, M, T).identity();
 
@@ -179,7 +180,7 @@ pub fn rotate_y(
 pub fn rotate_z(
     comptime M: usize,
     comptime T: type,
-    angle_radians: T,
+    angle: unit.Angle(T, .radians),
 ) Matrix(M, M, T) {
     comptime {
         if (M != 3 and M != 4) {
@@ -187,8 +188,8 @@ pub fn rotate_z(
         }
     }
 
-    const cos_angle = @cos(angle_radians);
-    const sin_angle = @sin(angle_radians);
+    const cos_angle = @cos(angle.angle);
+    const sin_angle = @sin(angle.angle);
 
     var rotation_matrix = Matrix(M, M, T).identity();
 
@@ -235,6 +236,43 @@ pub fn scale_4x4(comptime T: type, scale_vector: *const Vector(3, T)) Matrix(4, 
     return scale(4, 3, T, scale_vector);
 }
 
+test "left_handed_perspective_matrix" {
+    const perspective_matrix = left_handed_perspective_matrix(
+        f32,
+        .{
+            .fov = unit.Degrees_f.init(90.0),
+            .aspect = 16.0 / 9.0,
+            .near = 0.1,
+            .far = 100.0,
+        },
+    );
+
+    try std.testing.expectEqual(Matrix(4, 4, f32).init(@Vector(16, f32){
+        0.5625, 0, 0,          0,
+        0,      1, 0,          0,
+        0,      0, 1.001001,   1,
+        0,      0, -0.1001001, 0,
+    }), perspective_matrix);
+}
+
+test "left_handed_look_at_matrix" {
+    const look_at_matrix = left_handed_look_at_matrix(
+        f32,
+        .{
+            .eye = Vector(3, f32).init(@Vector(3, f32){ 0, 0, -5 }),
+            .target = Vector(3, f32).init(@Vector(3, f32){ 0, 0, 0 }),
+            .up = Vector(3, f32).init(@Vector(3, f32){ 0, 1, 0 }),
+        },
+    );
+
+    try std.testing.expectEqual(Matrix(4, 4, f32).init(@Vector(16, f32){
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 5, 1,
+    }), look_at_matrix);
+}
+
 test "translate" {
     const translation_vector = Vector(3, f32).init(@Vector(3, f32){ 1, 2, 3 });
     try std.testing.expectEqual(Matrix(4, 4, f32).init(@Vector(16, f32){
@@ -251,7 +289,7 @@ test "rotate_x" {
         0, 0.8660254, 0.5,       0,
         0, -0.5,      0.8660254, 0,
         0, 0,         0,         1,
-    }), rotate_x(4, f32, std.math.pi / 6.0));
+    }), rotate_x(4, f32, unit.Radians_f.init(std.math.pi / 6.0)));
 }
 
 test "rotate_y" {
@@ -260,7 +298,7 @@ test "rotate_y" {
         0,         1, 0,         0,
         0.5,       0, 0.8660254, 0,
         0,         0, 0,         1,
-    }), rotate_y(4, f32, std.math.pi / 6.0));
+    }), rotate_y(4, f32, unit.Radians_f.init(std.math.pi / 6.0)));
 }
 
 test "rotate_z" {
@@ -269,7 +307,7 @@ test "rotate_z" {
         -0.5,      0.8660254, 0, 0,
         0,         0,         1, 0,
         0,         0,         0, 1,
-    }), rotate_z(4, f32, std.math.pi / 6.0));
+    }), rotate_z(4, f32, unit.Radians_f.init(std.math.pi / 6.0)));
 }
 
 test "scale" {

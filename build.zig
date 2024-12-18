@@ -29,6 +29,7 @@ pub fn build(b: *std.Build) void {
         "src/matrix.zig",
         "src/transform.zig",
         "src/units/time.zig",
+        "src/units/angle.zig",
     };
 
     for (0..test_root_source_files.len) |i| {
