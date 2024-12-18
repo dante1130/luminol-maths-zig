@@ -1,3 +1,5 @@
+const std = @import("std");
+
 const Vector = @import("vector.zig").Vector;
 const Matrix = @import("matrix.zig").Matrix;
 
@@ -231,4 +233,51 @@ pub fn scale_3x3(comptime T: type, scale_vector: *const Vector(3, T)) Matrix(3, 
 
 pub fn scale_4x4(comptime T: type, scale_vector: *const Vector(3, T)) Matrix(4, 4, T) {
     return scale(4, 3, T, scale_vector);
+}
+
+test "translate" {
+    const translation_vector = Vector(3, f32).init(@Vector(3, f32){ 1, 2, 3 });
+    try std.testing.expectEqual(Matrix(4, 4, f32).init(@Vector(16, f32){
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        1, 2, 3, 1,
+    }), translate_4x4(f32, &translation_vector));
+}
+
+test "rotate_x" {
+    try std.testing.expectEqual(Matrix(4, 4, f32).init(@Vector(16, f32){
+        1, 0,         0,         0,
+        0, 0.8660254, 0.5,       0,
+        0, -0.5,      0.8660254, 0,
+        0, 0,         0,         1,
+    }), rotate_x(4, f32, std.math.pi / 6.0));
+}
+
+test "rotate_y" {
+    try std.testing.expectEqual(Matrix(4, 4, f32).init(@Vector(16, f32){
+        0.8660254, 0, -0.5,      0,
+        0,         1, 0,         0,
+        0.5,       0, 0.8660254, 0,
+        0,         0, 0,         1,
+    }), rotate_y(4, f32, std.math.pi / 6.0));
+}
+
+test "rotate_z" {
+    try std.testing.expectEqual(Matrix(4, 4, f32).init(@Vector(16, f32){
+        0.8660254, 0.5,       0, 0,
+        -0.5,      0.8660254, 0, 0,
+        0,         0,         1, 0,
+        0,         0,         0, 1,
+    }), rotate_z(4, f32, std.math.pi / 6.0));
+}
+
+test "scale" {
+    const scale_vector = Vector(3, f32).init(@Vector(3, f32){ 2, 3, 4 });
+    try std.testing.expectEqual(Matrix(4, 4, f32).init(@Vector(16, f32){
+        2, 0, 0, 0,
+        0, 3, 0, 0,
+        0, 0, 4, 0,
+        0, 0, 0, 1,
+    }), scale_4x4(f32, &scale_vector));
 }

@@ -21,14 +21,40 @@ pub fn build(b: *std.Build) void {
 
     module.linkLibrary(lib);
 
-    const lib_unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/root.zig"),
+    const test_step = b.step("test", "Run unit tests");
+
+    const test_root_source_files = [_][]const u8{
+        "src/root.zig",
+        "src/vector.zig",
+        "src/matrix.zig",
+        "src/transform.zig",
+        "src/units/time.zig",
+    };
+
+    for (0..test_root_source_files.len) |i| {
+        add_test(
+            b,
+            target,
+            optimize,
+            test_step,
+            b.path(test_root_source_files[i]),
+        );
+    }
+}
+
+pub fn add_test(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+    test_step: *std.Build.Step,
+    root_source_file: std.Build.LazyPath,
+) void {
+    const new_test = b.addTest(.{
+        .root_source_file = root_source_file,
         .target = target,
         .optimize = optimize,
     });
 
-    const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
-
-    const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&run_lib_unit_tests.step);
+    const run_test = b.addRunArtifact(new_test);
+    test_step.dependOn(&run_test.step);
 }

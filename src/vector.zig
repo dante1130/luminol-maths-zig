@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub fn Vector(comptime N: usize, comptime T: type) type {
     return struct {
         vec: @Vector(N, T),
@@ -106,4 +108,113 @@ pub fn Vector(comptime N: usize, comptime T: type) type {
             return Self.init(a1 * b1 - a2 * b2);
         }
     };
+}
+
+test "dot" {
+    var v1 = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 0 });
+    var v2 = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 0 });
+    try std.testing.expectEqual(0.0, v1.dot(&v2));
+
+    v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 0, 0, 0 });
+    v2 = Vector(4, f32).init(@Vector(4, f32){ 0, 1, 0, 0 });
+    try std.testing.expectEqual(0.0, v1.dot(&v2));
+
+    v1 = Vector(4, f32).init(@Vector(4, f32){ 0, 1, 0, 0 });
+    v2 = Vector(4, f32).init(@Vector(4, f32){ 1, 0, 0, 0 });
+    try std.testing.expectEqual(0.0, v1.dot(&v2));
+
+    v1 = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 1 });
+    v2 = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 1 });
+    try std.testing.expectEqual(1.0, v1.dot(&v2));
+
+    v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 1, 1, 1 });
+    v2 = Vector(4, f32).init(@Vector(4, f32){ 1, 1, 1, 1 });
+    try std.testing.expectEqual(4.0, v1.dot(&v2));
+
+    v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 }).normalized();
+    v2 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 }).normalized();
+    try std.testing.expectApproxEqRel(1.0, v1.dot(&v2), 0.0001);
+
+    v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 }).normalized();
+    v2 = Vector(4, f32).init(@Vector(4, f32){ -1, -2, -3, -4 }).normalized();
+    try std.testing.expectApproxEqRel(-1.0, v1.dot(&v2), 0.0001);
+
+    v1 = Vector(4, f32).init(@Vector(4, f32){ 1, 2, 3, 4 }).normalized();
+    v2 = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 0 }).normalized();
+    try std.testing.expectApproxEqRel(0.0, v1.dot(&v2), 0.0001);
+}
+
+test "cross" {
+    var v1 = Vector(3, f32).init(@Vector(3, f32){ 0, 0, 0 });
+    var v2 = Vector(3, f32).init(@Vector(3, f32){ 0, 0, 0 });
+    try std.testing.expectEqual(Vector(3, f32).init(@Vector(3, f32){ 0, 0, 0 }), v1.cross(&v2));
+
+    v1 = Vector(3, f32).init(@Vector(3, f32){ 1, 0, 0 });
+    v2 = Vector(3, f32).init(@Vector(3, f32){ 0, 1, 0 });
+    try std.testing.expectEqual(Vector(3, f32).init(@Vector(3, f32){ 0, 0, 1 }), v1.cross(&v2));
+
+    v1 = Vector(3, f32).init(@Vector(3, f32){ 0, 1, 0 });
+    v2 = Vector(3, f32).init(@Vector(3, f32){ 1, 0, 0 });
+    try std.testing.expectEqual(Vector(3, f32).init(@Vector(3, f32){ 0, 0, -1 }), v1.cross(&v2));
+
+    v1 = Vector(3, f32).init(@Vector(3, f32){ 1, 1, 1 });
+    v2 = Vector(3, f32).init(@Vector(3, f32){ 2, 2, 2 });
+    try std.testing.expectEqual(Vector(3, f32).init(@Vector(3, f32){ 0, 0, 0 }), v1.cross(&v2));
+
+    v1 = Vector(3, f32).init(@Vector(3, f32){ 1, 2, 3 });
+    v2 = Vector(3, f32).init(@Vector(3, f32){ 0, 0, 0 });
+    try std.testing.expectEqual(Vector(3, f32).init(@Vector(3, f32){ 0, 0, 0 }), v1.cross(&v2));
+
+    v1 = Vector(3, f32).init(@Vector(3, f32){ -1, -2, -3 });
+    v2 = Vector(3, f32).init(@Vector(3, f32){ 1, 2, 3 });
+    try std.testing.expectEqual(Vector(3, f32).init(@Vector(3, f32){ 0, 0, 0 }), v1.cross(&v2));
+
+    v1 = Vector(3, f32).init(@Vector(3, f32){ 1, 2, 3 });
+    v2 = Vector(3, f32).init(@Vector(3, f32){ 4, 5, 6 });
+    try std.testing.expectEqual(Vector(3, f32).init(@Vector(3, f32){ -3, 6, -3 }), v1.cross(&v2));
+}
+
+test "magnitude" {
+    var v = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 0 });
+    try std.testing.expectEqual(0.0, v.magnitude());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 1, 0, 0, 0 });
+    try std.testing.expectEqual(1.0, v.magnitude());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 0, 1, 0, 0 });
+    try std.testing.expectEqual(1.0, v.magnitude());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 1, 0 });
+    try std.testing.expectEqual(1.0, v.magnitude());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 1 });
+    try std.testing.expectEqual(1.0, v.magnitude());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 1, 1, 1, 1 });
+    try std.testing.expectEqual(@sqrt(4.0), v.magnitude());
+}
+
+test "normalized" {
+    var v = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 0 });
+    try std.testing.expectEqual(Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 0 }), v.normalized());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 1, 0, 0, 0 });
+    try std.testing.expectEqual(Vector(4, f32).init(@Vector(4, f32){ 1, 0, 0, 0 }), v.normalized());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 0, 1, 0, 0 });
+    try std.testing.expectEqual(Vector(4, f32).init(@Vector(4, f32){ 0, 1, 0, 0 }), v.normalized());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 1, 0 });
+    try std.testing.expectEqual(Vector(4, f32).init(@Vector(4, f32){ 0, 0, 1, 0 }), v.normalized());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 1 });
+    try std.testing.expectEqual(Vector(4, f32).init(@Vector(4, f32){ 0, 0, 0, 1 }), v.normalized());
+
+    v = Vector(4, f32).init(@Vector(4, f32){ 1, 1, 1, 1 });
+    try std.testing.expectEqual(Vector(4, f32).init(@Vector(4, f32){
+        1.0 / @sqrt(4.0),
+        1.0 / @sqrt(4.0),
+        1.0 / @sqrt(4.0),
+        1.0 / @sqrt(4.0),
+    }), v.normalized());
 }
