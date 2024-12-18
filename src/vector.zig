@@ -46,6 +46,12 @@ pub fn Vector(comptime N: usize, comptime T: type) type {
         }
 
         pub fn slice(self: *const Self, comptime start: usize, comptime end: usize) Vector(end - start, T) {
+            comptime {
+                if (start > end) {
+                    @compileError("start must be less than end");
+                }
+            }
+
             const arr_view: [N]T = self.vec;
             var arr_slice: [end - start]T = undefined;
             @memcpy(&arr_slice, arr_view[start..end]);
