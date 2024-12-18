@@ -1,4 +1,5 @@
 const std = @import("std");
+const Vector = @import("vector.zig").Vector;
 
 pub fn Matrix(comptime M: usize, comptime N: usize, comptime T: type) type {
     return struct {
@@ -176,6 +177,23 @@ pub fn Matrix(comptime M: usize, comptime N: usize, comptime T: type) type {
             return self.mul(&mat_scalar);
         }
 
+        pub fn mul_vector(self: *const Self, vector: *const Vector(N, T)) Vector(M, T) {
+            const arr_view: [M * N]T = self.mat;
+
+            var vec = Vector(M, T).init(@splat(0.0));
+
+            for (0..M) |i| {
+                const row_slice = arr_view[(i * M)..(i * M + N)];
+                var row: [N]T = undefined;
+                @memcpy(&row, row_slice);
+
+                const mat_row = Vector(N, T).init(row);
+                vec.vec[i] = mat_row.dot(vector);
+            }
+
+            return vec;
+        }
+
         pub fn div(self: *const Self, other: *const Self) Self {
             return Self.init(self.mat / other.mat);
         }
@@ -257,4 +275,24 @@ test "Mat4x4_inverse" {
         -1.5, 0.0, 0.5,  0.5,
         -2.2, 0.0, 0.4,  1.0,
     }), mat.inverse());
+}
+
+test "Mat4x4_mul_vector" {
+    const mat = Matrix(4, 4, f32).init(@Vector(16, f32){
+        2,  1, 3,  0,
+        -1, 3, 0,  0,
+        3,  0, -1, 0,
+        5,  4, -2, 1,
+    });
+
+    const vec = Vector(4, f32).init(@Vector(4, f32){
+        2, 0, -1, 1,
+    });
+
+    try std.testing.expectEqual(Vector(4, f32).init(@Vector(4, f32){
+        1,
+        -2,
+        7,
+        13,
+    }), mat.mul_vector(&vec));
 }
