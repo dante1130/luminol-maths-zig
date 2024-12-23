@@ -27,6 +27,7 @@ pub fn build(b: *std.Build) void {
         "src/root.zig",
         "src/vector.zig",
         "src/matrix.zig",
+        "src/quaternion.zig",
         "src/transform.zig",
         "src/units/time.zig",
         "src/units/angle.zig",
