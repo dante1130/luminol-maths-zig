@@ -39,12 +39,6 @@ pub fn Quaternion(T: type) type {
             };
         }
 
-        pub fn cross(self: *const @This(), other: *const @This()) @This() {
-            return @This(){
-                .quat = self.quat.cross(&other.quat),
-            };
-        }
-
         pub fn normalize(self: *const @This()) @This() {
             return @This(){
                 .quat = self.quat.normalized(),
