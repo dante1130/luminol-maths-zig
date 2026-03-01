@@ -1,6 +1,7 @@
 .{
-    .name = "luminol_maths",
+    .name = .luminol_maths,
     .version = "0.0.0",
+    .fingerprint = 0x682a71ebcc8fb216,
 
     .dependencies = .{},
     .paths = .{

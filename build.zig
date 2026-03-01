@@ -4,11 +4,14 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const lib = b.addStaticLibrary(.{
+    const lib = b.addLibrary(.{
         .name = "luminol_maths",
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
+        .linkage = .static,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/root.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     b.installArtifact(lib);
@@ -52,9 +55,11 @@ pub fn add_test(
     root_source_file: std.Build.LazyPath,
 ) void {
     const new_test = b.addTest(.{
-        .root_source_file = root_source_file,
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = root_source_file,
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     const run_test = b.addRunArtifact(new_test);
